@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>CostLens</title>
+    <script>
+      // páginas do app abertas sem a senha: volta para a entrada do site
+      const i = location.pathname.indexOf('/app/');
+      location.replace((i >= 0 ? location.pathname.slice(0, i + 1) : '/') + location.hash);
+    </script>
+  </head>
+  <body>
+    <a href="./">Entrar no CostLens</a>
+  </body>
+</html>

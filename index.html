@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>CostLens</title>
+    <style>
+      /* Entrada com senha: um cartão central, o mesmo petróleo e cinza-aço do app. */
+      :root {
+        --bg: #edefec;
+        --surface: #fbfbfa;
+        --ink: #15181b;
+        --ink-2: #4a5056;
+        --muted: #7d838a;
+        --line: #e0e2de;
+        --line-2: #c9ccc7;
+        --accent: #0b6e73;
+        --accent-hover: #095a5e;
+        --accent-ink: #ffffff;
+        --critical-ink: #b32626;
+        --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        --display: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d0f10;
+          --surface: #16191b;
+          --ink: #eceeeb;
+          --ink-2: #b6bbb6;
+          --muted: #868c91;
+          --line: #2a2f32;
+          --line-2: #3b4145;
+          --accent: #46b8b6;
+          --accent-hover: #63c9c7;
+          --accent-ink: #081615;
+          --critical-ink: #ef7272;
+          color-scheme: dark;
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.5 var(--font);
+        display: grid;
+        place-items: center;
+        padding-block: 24px;
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
+      }
+      main {
+        width: 100%;
+        max-width: 380px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; }
+      .brand b { font: 600 20px/1 var(--display); letter-spacing: -0.01em; }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      h1 { margin: 0; font: 600 18px/1.3 var(--display); text-wrap: balance; }
+      p { margin: 0; color: var(--ink-2); }
+      label { font-size: 13px; font-weight: 500; }
+      input[type='password'] {
+        width: 100%;
+        height: 40px;
+        border: 1px solid var(--line-2);
+        border-radius: 6px;
+        background: var(--bg);
+        color: var(--ink);
+        padding: 0 12px;
+        font: 15px var(--font);
+        letter-spacing: 0.04em;
+      }
+      input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      button {
+        height: 40px;
+        border: 0;
+        border-radius: 6px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font: 600 15px var(--font);
+        cursor: pointer;
+      }
+      button:hover { background: var(--accent-hover); }
+      button:disabled { opacity: 0.6; cursor: progress; }
+      .field { display: flex; flex-direction: column; gap: 6px; }
+      #msg { min-height: 1.5em; font-size: 13px; color: var(--critical-ink); }
+      #msg.ok { color: var(--muted); }
+      .note { font-size: 12.5px; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">
+        <svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true">
+          <rect x="1" y="1" width="24" height="24" rx="6" fill="var(--accent)" />
+          <path d="M7 17.5V8.5h6.5a4.5 4.5 0 0 1 0 9H7z" fill="none" stroke="var(--accent-ink)" stroke-width="2" />
+          <path d="M11 13h9" stroke="var(--accent-ink)" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <b>CostLens</b>
+      </div>
+      <form class="card" id="gate" autocomplete="on">
+        <h1>Should-cost e DFM a partir do CAD</h1>
+        <p>Demonstração com acesso restrito. Digite a senha que você recebeu.</p>
+        <div class="field">
+          <label for="pw">Senha</label>
+          <input type="password" id="pw" name="password" autocomplete="current-password" required autofocus />
+        </div>
+        <button type="submit" id="go">Entrar</button>
+        <div id="msg" role="status" aria-live="polite"></div>
+      </form>
+      <p class="note">
+        O app fica cifrado neste site e só abre com a senha, que não sai do seu navegador. Os arquivos CAD que
+        você analisar também são processados só no seu computador.
+      </p>
+    </main>
+    <script type="module">
+      const form = document.getElementById('gate');
+      const pw = document.getElementById('pw');
+      const go = document.getElementById('go');
+      const msg = document.getElementById('msg');
+      const say = (text, ok = false) => {
+        msg.textContent = text;
+        msg.className = ok ? 'ok' : '';
+      };
+      const DAYS = 14;
+
+      function db() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open('costlens-gate', 1);
+          req.onupgradeneeded = () => req.result.createObjectStore('kv');
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+      async function kv(mode, fn) {
+        const d = await db();
+        return new Promise((resolve, reject) => {
+          const tx = d.transaction('kv', mode);
+          const r = fn(tx.objectStore('kv'));
+          tx.oncomplete = () => resolve(r?.result);
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+      const getKey = () => kv('readonly', (s) => s.get('key')).catch(() => null);
+      const setKey = (v) => kv('readwrite', (s) => s.put(v, 'key'));
+      const delKey = () => kv('readwrite', (s) => s.delete('key')).catch(() => {});
+
+      async function canOpen(key) {
+        const buf = new Uint8Array(await (await fetch('vault/manifest.bin', { cache: 'no-cache' })).arrayBuffer());
+        try {
+          await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.subarray(0, 12) }, key, buf.subarray(12));
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
+      function activeWorker(reg) {
+        const w = reg.active ?? reg.waiting ?? reg.installing;
+        if (!w || w.state === 'activated') return Promise.resolve();
+        return new Promise((resolve) => w.addEventListener('statechange', () => w.state === 'activated' && resolve()));
+      }
+
+      // para onde a pessoa queria ir (#pn-…, #biblioteca…), quando chegou aqui vinda de um link do app
+      const target = () => {
+        const h = location.hash;
+        return h && h !== '#sair' ? `app/${h}` : 'app/#portfolio';
+      };
+
+      async function start() {
+        if (!('serviceWorker' in navigator) || !window.isSecureContext || !crypto?.subtle) {
+          say('Este navegador não permite abrir o app (service worker desativado, comum em janela privada do Firefox). Use uma janela normal do Chrome, Edge, Firefox ou Safari.');
+          go.disabled = true;
+          return;
+        }
+        const reg = await navigator.serviceWorker.register('sw.js', { scope: './app/' });
+        if (location.hash === '#sair') {
+          await delKey();
+          history.replaceState(null, '', location.pathname);
+          say('Você saiu. A senha foi esquecida neste navegador.', true);
+          return;
+        }
+        const saved = await getKey();
+        if (saved?.key && saved.exp > Date.now() && (await canOpen(saved.key))) {
+          say('Abrindo…', true);
+          await activeWorker(reg);
+          location.replace(target());
+          return;
+        }
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          go.disabled = true;
+          say('Verificando…', true);
+          try {
+            const params = await (await fetch('vault/params.json', { cache: 'no-cache' })).json();
+            const salt = Uint8Array.from(atob(params.salt), (c) => c.charCodeAt(0));
+            const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw.value.trim()), 'PBKDF2', false, ['deriveKey']);
+            const key = await crypto.subtle.deriveKey(
+              { name: 'PBKDF2', salt, iterations: params.iterations, hash: 'SHA-256' },
+              base,
+              { name: 'AES-GCM', length: 256 },
+              false,
+              ['decrypt'],
+            );
+            if (!(await canOpen(key))) {
+              say('Senha incorreta. Confira maiúsculas, minúsculas e hífens.');
+              go.disabled = false;
+              pw.select();
+              return;
+            }
+            await setKey({ key, exp: Date.now() + DAYS * 864e5, stamp: Date.now() });
+            say('Abrindo…', true);
+            await activeWorker(reg);
+            location.replace(target());
+          } catch (err) {
+            say(`Não foi possível abrir: ${err?.message ?? err}`);
+            go.disabled = false;
+          }
+        });
+      }
+      start().catch((err) => say(`Não foi possível iniciar: ${err?.message ?? err}`));
+    </script>
+  </body>
+</html>

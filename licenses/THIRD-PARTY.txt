@@ -1,0 +1,26 @@
+# Avisos de terceiros — CostLens
+
+O CostLens usa os componentes abaixo. Os textos completos das licenças LGPL estão em `licenses/` no build.
+
+| Componente | Versão | Licença | Uso |
+|---|---|---|---|
+| Open CASCADE Technology (via occt-import-js) | 7.x / 0.0.23 | LGPL-2.1 com exceção Open CASCADE | leitura de STEP/IGES/BREP e tesselação (WebAssembly) |
+| occt-import-js | 0.0.23 | LGPL-2.1 | ponte JavaScript/WebAssembly para o OpenCascade |
+| three.js | 0.186 | MIT | renderização 3D |
+| three-mesh-bvh | 0.9 | MIT | lançamento de raios acelerado (espessura, contra-saídas) |
+| React / React DOM | 19 | MIT | interface |
+| @react-three/fiber, @react-three/drei | 9 / 10 | MIT | 3D em React |
+| Zustand | 5 | MIT | estado da aplicação |
+| Immer | 11 | MIT | atualizações imutáveis |
+| Comlink | 4 | Apache-2.0 | comunicação com o Web Worker |
+| idb-keyval | 6 | Apache-2.0 | armazenamento local (IndexedDB) |
+| ExcelJS | 4 | MIT | exportação para Excel |
+| lucide-react | 1 | ISC | ícones |
+| Archivo, IBM Plex Sans, IBM Plex Mono (Fontsource) | 5 | SIL OFL-1.1 | fontes |
+
+## Sobre a LGPL do OpenCascade
+
+O OpenCascade é carregado como um módulo WebAssembly separado (`occt-import-js.wasm`), sem modificações, e
+pode ser substituído por outra build compatível trocando esse arquivo. O código-fonte está em
+<https://github.com/kovacsv/occt-import-js> e <https://dev.opencascade.org>. Distribuições internas do
+CostLens devem manter este aviso e os textos de licença.
