@@ -137,6 +137,8 @@
         msg.className = ok ? 'ok' : '';
       };
       const DAYS = 14;
+      // igual ao script que cifra o site: maiúsculas/minúsculas, espaços e hífens não importam
+      const normalize = (s) => s.normalize('NFKC').replace(/[\s-]+/g, '').toUpperCase();
 
       function db() {
         return new Promise((resolve, reject) => {
@@ -209,7 +211,7 @@
           try {
             const params = await (await fetch('vault/params.json', { cache: 'no-cache' })).json();
             const salt = Uint8Array.from(atob(params.salt), (c) => c.charCodeAt(0));
-            const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw.value.trim()), 'PBKDF2', false, ['deriveKey']);
+            const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(normalize(pw.value)), 'PBKDF2', false, ['deriveKey']);
             const key = await crypto.subtle.deriveKey(
               { name: 'PBKDF2', salt, iterations: params.iterations, hash: 'SHA-256' },
               base,
@@ -218,7 +220,7 @@
               ['decrypt'],
             );
             if (!(await canOpen(key))) {
-              say('Senha incorreta. Confira maiúsculas, minúsculas e hífens.');
+              say('Senha incorreta. Maiúsculas, minúsculas, espaços e hífens não fazem diferença; confira as letras e os números.');
               go.disabled = false;
               pw.select();
               return;
