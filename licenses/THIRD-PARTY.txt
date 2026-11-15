@@ -18,6 +18,12 @@ O CostLens usa os componentes abaixo. Os textos completos das licenças LGPL est
 | lucide-react | 1 | ISC | ícones |
 | Archivo, IBM Plex Sans, IBM Plex Mono (Fontsource) | 5 | SIL OFL-1.1 | fontes |
 
+## Arquivos de teste
+
+`tests/fixtures/nist/` traz um arquivo STEP do pacote *NIST PMI STEP Files* (projeto MBE PMI Validation and
+Conformance Testing), publicado pelo NIST para uso sem restrições. É usado só nos testes automatizados e não
+entra no build.
+
 ## Sobre a LGPL do OpenCascade
 
 O OpenCascade é carregado como um módulo WebAssembly separado (`occt-import-js.wasm`), sem modificações, e
